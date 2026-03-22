@@ -344,6 +344,7 @@ const Aim = (() => {
 const Game = (() => {
   let state = 'start', currentQ = null, qStart = 0, timedOut = false;
   let startHover = null, resultHover = null, fh = null;
+  let resultAutoAdvance = false, nextInFlight = false;
 
   const g = () => window._gesture || { thumbActive: false, x: 0, y: 0 };
 
@@ -405,6 +406,11 @@ const Game = (() => {
   function doResult(gs) {
     const ring = $('result-ring'), CIRC = 113.1;
     Cursor.update(gs.x, gs.y, gs.thumbActive, 0);
+    if (resultAutoAdvance) {
+      resultHover = null;
+      ring.style.strokeDashoffset = CIRC;
+      return;
+    }
     if (gs.thumbActive) {
       if (!resultHover) resultHover = performance.now();
       const p = Math.min((performance.now() - resultHover) / 1000 / HOVER_TIME, 1);
@@ -488,6 +494,8 @@ const Game = (() => {
     })).json();
     if (!d.ok) return;
     state = 'play';
+    nextInFlight = false;
+    resultAutoAdvance = false;
     Audio.onStart();   // ← 開始音效 + BGM
     hide($('screen-start'));
     show($('hud')); show($('timer-bar-wrap')); show($('hint-text')); showGame();
@@ -501,6 +509,7 @@ const Game = (() => {
     currentQ = d;
     qStart   = performance.now();
     timedOut = false;
+    resultAutoAdvance = false;
     Aim.reset();
     Audio.resetTick();
     $('hud-q').textContent     = `${d.index + 1}/${d.total}`;
@@ -542,6 +551,7 @@ const Game = (() => {
   function showResult(d, autoNext = false) {
     state = 'result'; hideGame(); Aim.reset();
     lastResult = d.result;
+    resultAutoAdvance = autoNext;
     $('result-card').className = 'result-card ' + d.result;
     const m = {
       correct: ['○ 答對了！', `錯字正是「${d.correct_str}」`, 'correct'],
@@ -579,13 +589,22 @@ const Game = (() => {
   }
 
   async function doNext() {
+    if (nextInFlight) return;
+    nextInFlight = true;
+    state = 'transition';
+    resultAutoAdvance = false;
+    resultHover = null;
     if (autoNextTimer) { clearTimeout(autoNextTimer); autoNextTimer = null; }
     hide($('screen-result'));
-    const d = await (await fetch('/next', { method: 'POST' })).json();
-    if (d.state === 'final') { showFinal(d); return; }
-    showGame();
-    state = 'play'; timedOut = false; Aim.reset();
-    await loadQ();
+    try {
+      const d = await (await fetch('/next', { method: 'POST' })).json();
+      if (d.state === 'final') { showFinal(d); return; }
+      showGame();
+      state = 'play'; timedOut = false; Aim.reset();
+      await loadQ();
+    } finally {
+      nextInFlight = false;
+    }
   }
 
   function showFinal(d) {
@@ -608,6 +627,9 @@ const Game = (() => {
     await fetch('/reset', { method: 'POST' });
     state = 'start'; currentQ = null; timedOut = false;
     startHover = null; resultHover = null; lastResult = null; Aim.reset();
+    resultAutoAdvance = false;
+    nextInFlight = false;
+    if (autoNextTimer) { clearTimeout(autoNextTimer); autoNextTimer = null; }
     hide($('screen-final')); hide($('screen-result'));
     hideGame(); hide($('hud'));
     hide($('timer-bar-wrap')); hide($('hint-text'));
