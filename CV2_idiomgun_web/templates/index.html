@@ -162,12 +162,28 @@ await startCamera();
     <div class="game-title">成語闖關</div>
     <div class="game-subtitle">IDIOM SHOOTER · GESTURE CONTROL</div>
     <div class="start-hint">豎起大拇指 · 停留 1.5 秒 · 開始遊戲</div>
-    <div class="meta-row" style="margin-top:20px">
+
+    <!-- 玩家名稱輸入 -->
+    <div style="margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:6px">
+      <label for="player-name"
+             style="font-family:var(--font-mono);font-size:.72rem;color:var(--muted);letter-spacing:.15em">
+        輸入名稱（選填）
+      </label>
+      <input id="player-name" type="text" maxlength="10" placeholder="最多 10 字"
+             style="background:rgba(0,0,0,0.4);border:1px solid var(--border);
+                    border-radius:4px;padding:8px 14px;color:var(--text);
+                    font-family:var(--font-main);font-size:1rem;text-align:center;
+                    width:220px;outline:none;transition:border-color .2s"
+             onfocus="this.style.borderColor='var(--neon-g)'"
+             onblur="this.style.borderColor='var(--border)'">
+    </div>
+
+    <div class="meta-row" style="margin-top:16px">
       <span class="meta-tag">10 題</span>
       <span class="meta-tag">15s / 題</span>
       <span class="meta-tag">混合題型</span>
     </div>
-    <div style="margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:8px">
+    <div style="margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:8px">
       <svg width="64" height="64" viewBox="0 0 64 64" style="opacity:.85">
         <circle cx="32" cy="32" r="26" stroke="rgba(0,229,160,.15)" stroke-width="4" fill="none"/>
         <circle id="start-ring" cx="32" cy="32" r="26" stroke="#00e5a0" stroke-width="4" fill="none"
@@ -196,9 +212,15 @@ await startCamera();
     <div class="result-status" id="result-status"></div>
     <div class="result-detail" id="result-detail"></div>
     <div class="result-idiom"  id="result-idiom"></div>
+
+    <!-- 解析區塊（答錯/超時才顯示） -->
+    <div id="result-explanation" style="display:none">
+      <div class="explanation-label">📖 成語解析</div>
+      <div class="explanation-text" id="explanation-text"></div>
+    </div>
+
     <div id="result-next-hint">
-      <!-- 手動繼續時顯示 -->
-      <div class="result-next" id="result-next" style="display:none">▶ 比大拇指 1.5 秒繼續</div>
+      <div class="result-next" id="result-next" style="display:none">▶ 比大拇指 5 秒繼續</div>
       <div style="display:none;margin-top:14px;justify-content:center" id="result-ring-wrap">
         <svg width="48" height="48" viewBox="0 0 48 48">
           <circle cx="24" cy="24" r="18" stroke="rgba(255,255,255,.1)" stroke-width="3" fill="none"/>
@@ -208,7 +230,6 @@ await startCamera();
                          filter:drop-shadow(0 0 6px #00e5a0);transition:stroke-dashoffset .05s linear"/>
         </svg>
       </div>
-      <!-- 超時自動繼續時顯示 -->
       <div id="result-auto-hint"
            style="display:none;font-family:var(--font-mono);font-size:.8rem;
                   color:var(--neon-b);letter-spacing:.15em;margin-top:10px">
@@ -224,7 +245,36 @@ await startCamera();
     <div class="final-title">遊戲結束！</div>
     <div class="final-score" id="final-score">0 / 100</div>
     <div class="final-rank"  id="final-rank">繼續加油</div>
+
+    <!-- 積分榜（遊戲結束後內嵌顯示） -->
+    <div id="lb-final-wrap" style="margin:20px 0 16px">
+      <div style="font-family:var(--font-mono);font-size:.7rem;color:var(--neon-b);
+                  letter-spacing:.15em;margin-bottom:10px">🏆 積分榜</div>
+      <div id="lb-final-list"
+           style="font-family:var(--font-mono);font-size:.75rem;color:var(--muted)">
+        載入中...
+      </div>
+    </div>
+
     <button class="btn-restart" onclick="Game.reset()">再玩一次</button>
+  </div>
+</div>
+
+<!-- 積分榜側欄（首頁右上角，遊戲中隱藏） -->
+<div id="lb-sidebar"
+     style="position:fixed;top:48px;right:20px;z-index:15;
+            width:220px;display:none">
+  <div style="background:rgba(8,16,28,0.88);border:1px solid rgba(0,200,255,0.2);
+              border-radius:6px;padding:12px 16px;backdrop-filter:blur(8px)">
+    <div style="font-family:var(--font-mono);font-size:.72rem;color:var(--neon-b);
+                letter-spacing:.15em;margin-bottom:10px;text-align:center">
+      🏆 積分榜
+    </div>
+    <div id="lb-sidebar-list">
+      <div style="font-family:var(--font-mono);font-size:.68rem;color:var(--muted);text-align:center">
+        載入中...
+      </div>
+    </div>
   </div>
 </div>
 
@@ -235,6 +285,20 @@ await startCamera();
 const HOVER_TIME   = 1.5;
 const TOTAL_Q      = 10;
 const Q_TIME_LIMIT = 15.0;
+
+// 成語解析字典（前端備份，確保解析一定顯示）
+const EXPLANATIONS = {
+  "畫蛇添足": "「畫」一條「蛇」，又「添」上腳",
+  "一鼓作氣": "打一次「鼓」，「作」出「氣勢」",
+  "破釜沉舟": "「打破」「鍋釜」，「沉」掉「船」",
+  "一目了然": "「一眼」看去，「了解」「然後」全懂",
+  "一箭雙鵰": "「一箭」射出，「中」兩隻「鳥」",
+  "虎視眈眈": "虎在「看」，「眈眈」地盯著",
+  "青出於藍": "「青色」「出自於」「藍色」之調配",
+  "當機立斷": "「當下的」「機會」立刻「判斷」要不要",
+  "半途而廢": "都到了「一半的路途」，就「作廢」掉了",
+  "如魚得水": "「就如」一條「魚」「得到了」水",
+};
 
 const $    = id => document.getElementById(id);
 const show = el => { if (el) el.style.display = ''; };
@@ -392,14 +456,13 @@ const Game = (() => {
 
   // ── 結果畫面（手動繼續） ───────────────────────────
   function doResult(gs) {
-    // autoNext 模式、或已在跳題中，不處理手勢
     if (autoNextTimer !== null || proceedLock) return;
 
     const ring = $('result-ring'), CIRC = 113.1;
     Cursor.update(gs.x, gs.y, gs.thumbActive, 0);
     if (gs.thumbActive) {
       if (!resultHover) resultHover = performance.now();
-      const p = Math.min((performance.now() - resultHover) / 1000 / HOVER_TIME, 1);
+      const p = Math.min((performance.now() - resultHover) / 1000 / resultHoverTime, 1);
       ring.style.strokeDashoffset = CIRC * (1 - p);
       if (p >= 1) { resultHover = null; proceedNext(); }
     } else {
@@ -481,6 +544,7 @@ const Game = (() => {
     actionLock = false;
     Audio.onStart();
     hide($('screen-start'));
+    hide($('lb-sidebar'));   // 遊戲開始，隱藏積分榜側欄
     show($('hud')); show($('timer-bar-wrap')); show($('hint-text'));
     await loadNextQuestion();
   }
@@ -514,7 +578,7 @@ const Game = (() => {
 
   // 答題處理（從 doPlay 觸發，此時 actionLock=true, state='result'）
   async function handleAnswer(chosen, idx, boxes) {
-    Timer.stop();   // 停止計時
+    Timer.stop();
     const b  = boxes?.[idx];
     const fx = b ? (b.x1 + b.x2) / 2 : innerWidth / 2;
     const fy = b ? (b.y1 + b.y2) / 2 : innerHeight / 2;
@@ -525,7 +589,8 @@ const Game = (() => {
     if (d.result === 'correct') { Effects.onCorrect(fx, fy); Audio.onCorrect(); }
     else                        { Effects.onWrong(fx, fy);   Audio.onWrong();   }
     questionsAnswered++;
-    if (currentQ) currentQ.score = d.score;  // 更新分數
+    if (currentQ) currentQ.score = d.score;
+    d.explanation = EXPLANATIONS[d.idiom] || currentQ?.explanation || '';
     hideGame();
     showResultCard(d, false);
   }
@@ -538,14 +603,18 @@ const Game = (() => {
     Effects.onTimeout(innerWidth / 2, innerHeight / 2);
     Audio.onTimeout();
     questionsAnswered++;
-    if (currentQ) currentQ.score = d.score;  // 更新分數，供 showFinal 使用
+    if (currentQ) currentQ.score = d.score;
+    d.explanation = EXPLANATIONS[d.idiom] || currentQ?.explanation || '';
     hideGame();
     showResultCard(d, true);
   }
 
+  // 當前結果的 hover 時間（答錯/超時用 5 秒，答對用 1.5 秒）
+  let resultHoverTime = HOVER_TIME;
+
   // 顯示結果卡片
-  // autoNext=false → 需比拇指，進度環出現
-  // autoNext=true  → 2 秒後自動，隱藏進度環
+  // autoNext=false → 需比拇指繼續
+  // autoNext=true  → 2 秒後自動（超時）
   function showResultCard(d, autoNext) {
     $('result-card').className = 'result-card ' + d.result;
     const msgs = {
@@ -559,6 +628,19 @@ const Game = (() => {
     $('result-detail').textContent = detail;
     $('result-idiom').textContent  = `成語：${d.idiom}　分數：${d.score}`;
 
+    // 解析：答錯或超時才顯示
+    const expEl   = $('result-explanation');
+    const expText = $('explanation-text');
+    if ((d.result === 'wrong' || d.result === 'timeout') && d.explanation) {
+      expText.textContent = d.explanation;
+      show(expEl);
+    } else {
+      hide(expEl);
+    }
+
+    // 答錯時 hover 5 秒，答對 1.5 秒
+    resultHoverTime = (d.result === 'wrong') ? 5.0 : HOVER_TIME;
+
     if (autoNext) {
       hide($('result-next'));
       hide($('result-ring-wrap'));
@@ -569,6 +651,8 @@ const Game = (() => {
         proceedNext();
       }, 2000);
     } else {
+      const secLabel = resultHoverTime === 5.0 ? '5' : '1.5';
+      $('result-next').textContent = `▶ 比大拇指 ${secLabel} 秒繼續`;
       show($('result-next'));
       $('result-ring-wrap').style.display = 'flex';
       hide($('result-auto-hint'));
@@ -603,13 +687,83 @@ const Game = (() => {
     if (autoNextTimer) { clearTimeout(autoNextTimer); autoNextTimer = null; }
     hideGame();
     hide($('hud')); hide($('timer-bar-wrap')); hide($('hint-text')); hide($('screen-result'));
+    hide($('lb-sidebar'));   // 側欄積分榜隱藏
     show($('screen-final'));
     Audio.onFinish();
+
     $('final-score').textContent = `${score} / ${TOTAL_Q * 10}`;
     $('final-rank').textContent =
       score >= TOTAL_Q * 9 ? '🏆 成語達人' :
       score >= TOTAL_Q * 7 ? '⭐ 表現良好' :
       score >= TOTAL_Q * 5 ? '💪 繼續加油' : '📚 多多練習';
+
+    // 提交分數後，重新抓榜單並在結算頁顯示（含名次標示）
+    const playerName = ($('player-name')?.value || '').trim() || '匿名';
+    fetch('/leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: playerName, score, total: TOTAL_Q * 10 })
+    })
+    .then(r => r.json())
+    .then(saved => loadFinalLeaderboard(score, saved?.entry?.id))
+    .catch(() => loadFinalLeaderboard(score, null));
+  }
+
+  // 結算頁積分榜：從後端取榜單，標示「你」的那一列
+  async function loadFinalLeaderboard(myScore, myId) {
+    const listEl = $('lb-final-list');
+    try {
+      const rows = await (await fetch('/leaderboard')).json();
+      if (!rows.length) {
+        listEl.innerHTML = '<div style="color:var(--muted);padding:8px 0">尚無紀錄</div>';
+        return;
+      }
+      const medals = ['🥇', '🥈', '🥉'];
+
+      // 找出「我的」那一列（用 id 比對，若無則用分數找第一個相符的）
+      let myRank = -1;
+      rows.forEach((r, i) => {
+        if (myId && r.id === myId) myRank = i;
+      });
+      if (myRank === -1) {
+        myRank = rows.findIndex(r => r.score === myScore);
+      }
+
+      listEl.innerHTML = rows.map((r, i) => {
+        const isMe = (i === myRank);
+        return `
+        <div class="lb-row-final ${i < 3 ? 'lb-top' : ''} ${isMe ? 'lb-me' : ''}">
+          <span class="lb-rank">${medals[i] || ('#' + r.rank)}</span>
+          <span class="lb-name">${r.name}${isMe ? ' ◀ 你' : ''}</span>
+          <span class="lb-score-final">${r.score}</span>
+        </div>`;
+      }).join('');
+    } catch (e) {
+      listEl.innerHTML = '<div style="color:var(--neon-r);font-size:.75rem">無法載入</div>';
+    }
+  }
+
+  // 側欄積分榜（首頁右上角）
+  async function loadSidebarLeaderboard() {
+    const listEl = $('lb-sidebar-list');
+    show($('lb-sidebar'));
+    try {
+      const rows = await (await fetch('/leaderboard')).json();
+      if (!rows.length) {
+        listEl.innerHTML = '<div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);text-align:center;padding:6px 0">尚無紀錄</div>';
+        return;
+      }
+      const medals = ['🥇', '🥈', '🥉'];
+      listEl.innerHTML = rows.map((r, i) => `
+        <div class="lb-row-side ${i < 3 ? 'lb-top-side' : ''}">
+          <span class="lb-rank-side">${medals[i] || r.rank}</span>
+          <span class="lb-name-side">${r.name}</span>
+          <span class="lb-score-side">${r.score}</span>
+        </div>
+      `).join('');
+    } catch (e) {
+      listEl.innerHTML = '<div style="font-size:.65rem;color:var(--neon-r)">無法載入</div>';
+    }
   }
 
   async function reset() {
@@ -626,11 +780,12 @@ const Game = (() => {
     show($('screen-start'));
     $('start-ring').style.strokeDashoffset = '163.36';
     $('start-status').textContent = '等待手勢...';
+    loadSidebarLeaderboard();   // 回到首頁，重新載入側欄積分榜
     init();
   }
 
   function init() { fh = requestAnimationFrame(frame); }
-  return { reset, init };
+  return { reset, init, loadSidebarLeaderboard };
 })();
 
 // ── 音量控制初始化 ────────────────────────────────────────
@@ -674,6 +829,8 @@ window.addEventListener('load', () => {
     }
   });
 
+  // 頁面載入時顯示側欄積分榜
+  Game.loadSidebarLeaderboard();
   Game.init();
 });
 </script>
