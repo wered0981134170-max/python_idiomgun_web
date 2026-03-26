@@ -1,26 +1,34 @@
-"""
-app.py  ──  成語射擊遊戲 Flask 主程式
-"""
 
-from flask import Flask, render_template, Response, jsonify, request
+# app.py──成語射擊遊戲 Flask 主程式
+# 支援本機開發&雲端部署(Render)
+
 import os
-import cv2
-import mediapipe as mp
+from flask import Flask, render_template, Response, jsonify, request
 import time
-import numpy as np
-import json
 import threading
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
 
 from idiom_data import generate_questions
+from db import init_db, save_score, get_top
+
+#啟動時建立資料庫
+init_db()
+
+#引入cv2/mediapipe（Render無攝影機會跳過）
+try:
+    import cv2
+    import mediapipe as mp
+    import numpy as np
+    from mediapipe.tasks import python as mp_python
+    from mediapipe.tasks.python import vision
+    CV2_OK = True
+except ImportError:
+    CV2_OK = False
 
 app = Flask(__name__)
 
-# ── 設定 ──────────────────────────────────────────────────
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "b_H", "hand_landmarker.task")
-DIFFICULTY   = "easy"
+#設定
+MODEL_PATH   = os.environ.get("MODEL_PATH", "hand_landmarker.task")
+DIFFICULTY   = "mixed"
 WRONG_RATIO  = 0.5
 TOTAL_Q      = 10
 Q_TIME_LIMIT = 15.0
@@ -28,14 +36,14 @@ HOVER_TIME   = 1.5
 SMOOTH       = 0.65
 LOST_TIMEOUT = 0.8
 
-# ── 全局遊戲狀態（執行緒共享） ──────────────────────────────
+# 全局 遊戲狀態
 game_lock = threading.Lock()
 game_state = {
-    "state": "start",      # start / play / result / final
+    "state": "start",
     "q_index": 0,
     "score": 0,
     "q_start_time": 0.0,
-    "ans_result": None,    # correct / wrong / timeout
+    "ans_result": None,
     "questions": [],
     "cursor_x": 640,
     "cursor_y": 360,
@@ -50,30 +58,34 @@ game_state = {
     "frame_h": 720,
 }
 
-# ── MediaPipe 初始化 ────────────────────────────────────────
-try:
-    BaseOptions           = python.BaseOptions
-    HandLandmarker        = vision.HandLandmarker
-    HandLandmarkerOptions = vision.HandLandmarkerOptions
-    VisionRunningMode     = vision.RunningMode
+#MediaPipe初始化（本機有攝影機時才啟用）
+MEDIAPIPE_OK = False
+landmarker   = None
 
-    options    = HandLandmarkerOptions(
-        base_options=BaseOptions(model_asset_path=MODEL_PATH),
-        running_mode=VisionRunningMode.VIDEO,
-        num_hands=1,
-    )
-    landmarker = HandLandmarker.create_from_options(options)
-    MEDIAPIPE_OK = True
-except Exception as e:
-    print(f"[警告] MediaPipe 初始化失敗: {e}")
-    MEDIAPIPE_OK = False
-    landmarker = None
+if CV2_OK:
+    try:
+        BaseOptions           = mp_python.BaseOptions
+        HandLandmarker        = vision.HandLandmarker
+        HandLandmarkerOptions = vision.HandLandmarkerOptions
+        VisionRunningMode     = vision.RunningMode
+        options = HandLandmarkerOptions(
+            base_options=BaseOptions(model_asset_path=MODEL_PATH),
+            running_mode=VisionRunningMode.VIDEO,
+            num_hands=1,
+        )
+        landmarker   = HandLandmarker.create_from_options(options)
+        MEDIAPIPE_OK = True
+        print("[OK] MediaPipe 初始化成功")
+    except Exception as e:
+        print(f"[警告] MediaPipe 初始化失敗（前端仍可運作）: {e}")
 
-cap = None
+cap      = None
 cap_lock = threading.Lock()
 
 def get_cap():
     global cap
+    if not CV2_OK:
+        return None
     with cap_lock:
         if cap is None or not cap.isOpened():
             cap = cv2.VideoCapture(0)
@@ -83,8 +95,9 @@ def get_cap():
 
 
 def process_frame():
-    """每幀處理手勢偵測，更新 game_state"""
     camera = get_cap()
+    if camera is None:
+        return None
     ret, frame = camera.read()
     if not ret:
         return None
@@ -92,7 +105,6 @@ def process_frame():
     frame = cv2.flip(frame, 1)
     W = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
     H = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
     thumb_mode = False
 
     if MEDIAPIPE_OK and landmarker:
@@ -119,7 +131,6 @@ def process_frame():
                     thumb_mode = True
                     gs["cursor_x"] = gs["last_valid_x"]
                     gs["cursor_y"] = gs["last_valid_y"]
-
             gs["thumb_active"] = thumb_mode
             gs["frame_w"] = W
             gs["frame_h"] = H
@@ -128,7 +139,6 @@ def process_frame():
 
 
 def generate_video_stream():
-    """MJPEG 串流（只傳原始攝影機畫面，遊戲邏輯在前端）"""
     while True:
         frame = process_frame()
         if frame is None:
@@ -137,27 +147,28 @@ def generate_video_stream():
         _, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 75])
         yield (b"--frame\r\nContent-Type: image/jpeg\r\n\r\n"
                + buf.tobytes() + b"\r\n")
-        time.sleep(0.033)  # ~30fps
+        time.sleep(0.033)
 
 
-# ── 路由 ──────────────────────────────────────────────────
+#路由
 @app.route("/")
 def index():
     return render_template("index.html",
                            total_q=TOTAL_Q,
-                           q_time=int(Q_TIME_LIMIT),
-                           difficulty=DIFFICULTY)
+                           q_time=int(Q_TIME_LIMIT))
 
 
 @app.route("/video_feed")
 def video_feed():
+    if not CV2_OK:
+        #Render無攝影機，回傳空串流
+        return Response(status=204)
     return Response(generate_video_stream(),
                     mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
 @app.route("/state")
 def get_state():
-    """前端輪詢：取得游標位置、拇指狀態"""
     with game_lock:
         gs = game_state
         return jsonify({
@@ -171,49 +182,48 @@ def get_state():
 
 @app.route("/start_game", methods=["POST"])
 def start_game():
-    data = request.json or {}
-    diff       = data.get("difficulty", DIFFICULTY)
-    wrong_r    = float(data.get("wrong_ratio", WRONG_RATIO))
-    total      = int(data.get("total_q", TOTAL_Q))
+    data    = request.json or {}
+    diff    = data.get("difficulty", DIFFICULTY)
+    wrong_r = float(data.get("wrong_ratio", WRONG_RATIO))
+    total   = int(data.get("total_q", TOTAL_Q))
 
     questions = generate_questions(n=total, difficulty=diff, wrong_ratio=wrong_r)
     with game_lock:
         gs = game_state
-        gs["state"]       = "play"
-        gs["q_index"]     = 0
-        gs["score"]       = 0
-        gs["questions"]   = questions
-        gs["q_start_time"]= time.time()
-        gs["ans_result"]  = None
-
+        gs["state"]        = "play"
+        gs["q_index"]      = 0
+        gs["score"]        = 0
+        gs["questions"]    = questions
+        gs["q_start_time"] = time.time()
+        gs["ans_result"]   = None
     return jsonify({"ok": True, "total": len(questions)})
 
 
 @app.route("/question")
 def get_question():
     with game_lock:
-        gs = game_state
+        gs  = game_state
         idx = gs["q_index"]
         qs  = gs["questions"]
         if idx >= len(qs):
-            return jsonify({"done": True})
-        q   = qs[idx]
+            return jsonify({"done": True, "score": gs["score"]})
+        q       = qs[idx]
         elapsed = time.time() - gs["q_start_time"]
         remain  = max(0.0, Q_TIME_LIMIT - elapsed)
         return jsonify({
-            "done":      False,
-            "index":     idx,
-            "total":     len(qs),
-            "score":     gs["score"],
-            "remain":    round(remain, 2),
-            "q_time":    Q_TIME_LIMIT,
-            "type":      q["type"],
-            "idiom":     q["idiom"],
-            "display":   q.get("display", ""),
-            "template":  q.get("template", ""),
-            "options":   q.get("options", []),
-            "hint":      q["hint"],
-            "difficulty":q["difficulty"],
+            "done":       False,
+            "index":      idx,
+            "total":      len(qs),
+            "score":      gs["score"],
+            "remain":     round(remain, 2),
+            "q_time":     Q_TIME_LIMIT,
+            "type":       q["type"],
+            "idiom":      q["idiom"],
+            "display":    q.get("display", ""),
+            "template":   q.get("template", ""),
+            "options":    q.get("options", []),
+            "hint":       q["hint"],
+            "difficulty": q["difficulty"],
         })
 
 
@@ -221,31 +231,26 @@ def get_question():
 def submit_answer():
     data   = request.json or {}
     chosen = data.get("chosen", "")
-
     with game_lock:
         gs  = game_state
         idx = gs["q_index"]
         qs  = gs["questions"]
         if idx >= len(qs):
             return jsonify({"error": "no question"})
-
         q = qs[idx]
         if q["type"] == "wrong":
-            correct = chosen == q["wrong_char"]
+            correct     = chosen == q["wrong_char"]
             correct_str = q["wrong_char"]
         else:
-            correct = chosen == q["answer"]
+            correct     = chosen == q["answer"]
             correct_str = q["answer"]
-
         if correct:
             gs["score"] += 10
             result = "correct"
         else:
             result = "wrong"
-
         gs["ans_result"] = result
         gs["state"]      = "result"
-
         return jsonify({
             "result":      result,
             "correct_str": correct_str,
@@ -262,7 +267,7 @@ def submit_timeout():
         qs  = gs["questions"]
         if idx >= len(qs):
             return jsonify({"error": "no question"})
-        q = qs[idx]
+        q           = qs[idx]
         correct_str = q.get("wrong_char") or q.get("answer", "")
         gs["ans_result"] = "timeout"
         gs["state"]      = "result"
@@ -283,9 +288,9 @@ def next_question():
             gs["state"] = "final"
             return jsonify({"state": "final", "score": gs["score"],
                             "total": len(gs["questions"])})
-        gs["state"]       = "play"
+        gs["state"]        = "play"
         gs["q_start_time"] = time.time()
-        gs["ans_result"]  = None
+        gs["ans_result"]   = None
         return jsonify({"state": "play", "q_index": gs["q_index"]})
 
 
@@ -293,14 +298,33 @@ def next_question():
 def reset_game():
     with game_lock:
         gs = game_state
-        gs["state"]    = "start"
-        gs["q_index"]  = 0
-        gs["score"]    = 0
-        gs["questions"]= []
+        gs["state"]     = "start"
+        gs["q_index"]   = 0
+        gs["score"]     = 0
+        gs["questions"] = []
     return jsonify({"ok": True})
 
 
+#積分榜路由
+@app.route("/leaderboard", methods=["GET"])
+def leaderboard_get():
+    """取得前 10 名"""
+    return jsonify(get_top(10))
+
+
+@app.route("/leaderboard", methods=["POST"])
+def leaderboard_post():
+    """提交分數：{ name, score, total }"""
+    data  = request.json or {}
+    name  = data.get("name", "").strip() or "匿名"
+    score = int(data.get("score", 0))
+    total = int(data.get("total", TOTAL_Q * 10))
+    entry = save_score(name, score, total)
+    return jsonify({"ok": True, "entry": entry})
+
+
+#主啟動
 if __name__ == "__main__":
-    # Render 會給一個 PORT 環境變數，沒給的話預設 5000
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    port  = int(os.environ.get("PORT", 5000))
+    debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+    app.run(host="0.0.0.0", port=port, debug=debug, threaded=True)

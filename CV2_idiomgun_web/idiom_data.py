@@ -6,36 +6,12 @@ import random
 
 idioms = {
 
-"怒髮衝冠":{
-    0:{"easy":["努"],"medium":["弩"],"hard":["恕"]},
-    1:{"medium":["髮"]},
-    2:{"easy":["沖"],"medium":["充"]},
-},
-
-"四面楚歌":{
-    0:{"easy":["西"],"medium":["死"],"hard":["匹"]},
-    2:{"easy":["處"],"hard":["濋"]},
-    3:{"easy":["哥"]}
-},
+#===================== 2字
 
 "畫蛇添足":{
     0:{"easy":["劃"],"medium":["晝"],"hard":["書"]},
     1:{"easy":["它"]},
     2:{"easy":["填"],"medium":["婖"]}
-},
-
-"守株待兔":{
-    0:{"easy":["首"],"medium":["宋"],"hard":["宇"]},
-    1:{"easy":["珠"],"medium":["殊"],"hard":["朱"]},
-    2:{"hard":["侍"]},
-    3:{"medium":["免"]}
-},
-
-"自相矛盾":{
-    0:{"easy":["白"],"medium":["目"],"hard":["由"]},
-    1:{"medium":["湘"],"hard":["箱"]},
-    2:{"easy":["予"],"medium":["茅"]},
-    3:{"easy":["頓"],"medium":["鈍"],"hard":["遁"]}
 },
 
 "一鼓作氣":{
@@ -44,26 +20,10 @@ idioms = {
     3:{"easy":["汽"],"medium":["棄"]}
 },
 
-"亡羊補牢":{
-    0:{"easy":["忘"],"medium":["芒"]},
-    2:{"easy":["捕"]}
-},
-
 "破釜沉舟":{
     0:{"easy":["坡"],"medium":["波"],"hard":["披"]},
     1:{"easy":["斧"]},
     2:{"medium":["沈"]}
-},
-
-"對症下藥":{
-    0:{"easy":["隊"],"hard":["對"]},
-    1:{"easy":["証"],"medium":["政"]}
-},
-
-"刻苦耐勞":{
-    0:{"easy":["克"],"medium":["剋"]},
-    1:{"easy":["奈"]},
-    2:{"easy":["牢"]}
 },
 
 "一目了然":{
@@ -75,43 +35,19 @@ idioms = {
 "一箭雙鵰":{
     1:{"easy":["剪"],"medium":["劍"]},
     2:{"hard":["爽"]},
-    3:{"easy":["雕"],"medium":["凋"]}
-},
-
-"三思而行":{
-    1:{"easy":["恩"]}
-},
-
-"五花八門":{
-    1:{"medium":["化"]},
-    2:{"easy":["人"],"medium":["入"]},
-    3:{"hard":["們"]}
+    3:{"easy":["雕"],"medium":["凋"],"hard":["鯛"]}
 },
 
 "虎視眈眈":{
-    1:{"hard":["示"]},
+    1:{"easy":["式"],"medium":["士"],"hard":["示"]},
     2:{"easy":["耽"]},
     3:{"easy":["耽"]}
-},
-
-"魚目混珠":{
-    0:{"easy":["漁"]},
-    1:{"easy":["自"],"medium":["且"],"hard":["日"]},
-    2:{"hard":["渾"]},
-    3:{"easy":["株"],"hard":["誅"]}
 },
 
 "青出於藍":{
     0:{"easy":["清"]},
     2:{"hard":["于"]},
     3:{"medium":["籃"]}
-},
-
-"百發百中":{
-    0:{"easy":["白"]},
-    1:{"medium":["廢"]},
-    2:{"easy":["白"]},
-    3:{"easy":["忠"],"medium":["仲"]}
 },
 
 "當機立斷":{
@@ -126,64 +62,33 @@ idioms = {
     3:{"easy":["費"]}
 },
 
-"水落石出":{
-    1:{"easy":["洛"],"medium":["絡"],"hard":["駱"]},
-    2:{"easy":["右"]}
-},
-
-"手忙腳亂":{
-    1:{"easy":["茫"],"medium":["盲"],"hard":["芒"]},
-    3:{"medium":["辭"]}
-},
-
-"心驚膽跳":{
-    0:{"easy":["必"]},
-    2:{"easy":["擔"],"hard":["憚"]},
-    3:{"medium":["挑"],"hard":["眺"]}
-},
-
-"名列前茅":{
-    0:{"easy":["各"],"hard":["洛"]},
-    1:{"medium":["烈"],"hard":["裂"]},
-    2:{"medium":["煎"],"hard":["箭"]},
-    3:{"medium":["矛"]}
-},
-
-"全神貫注":{
-    0:{"easy":["金"]},
-    1:{"easy":["伸"],"hard":["紳"]},
-    2:{"easy":["串"],"medium":["慣"],"hard":["摜"]},
-    3:{"easy":["住"],"medium":["註"],"hard":["柱"]}
-},
-
-"按部就班":{
-    0:{"easy":["案"],"medium":["暗"],"hard":["黯"]},
-    1:{"easy":["陪"],"medium":["步"],"hard":["倍"]},
-    3:{"easy":["般"],"medium":["斑"],"hard":["搬"]}
-},
-
-"前功盡棄":{
-    0:{"easy":["剪"],"hard":["煎"]},
-    1:{"easy":["工"],"medium":["攻"],"hard":["公"]},
-    2:{"easy":["儘"],"medium":["進"],"hard":["禁"]},
-    3:{"easy":["氣"]}
-},
-
-"持之以恆":{
-    0:{"hard":["待"]},
-    1:{"easy":["支"]},
-    2:{"easy":["已"],"medium":["己"],"hard":["乙"]},
-    3:{"easy":["衡"]}
-},
-
 "如魚得水":{
     0:{"hard":["奴"]},
     1:{"easy":["漁"]},
     2:{"easy":["德"]}
 },
+
+#===================== 4字（保留空位供日後新增）
+
 }
 
 options_pool = list("家國山水風雲花草人口手足心肝腦頭耳目鼻天地日月星空海河湖江田土木火金石")
+
+# ────────────────────────────────────────────────────────────
+# 成語解析（請依格式補充內容，key 為成語）
+# ────────────────────────────────────────────────────────────
+explanations = {
+    "畫蛇添足": "「畫」一條「蛇」，又「添」上腳",
+    "一鼓作氣": "打一次「鼓」，「作」出「氣勢」",
+    "破釜沉舟": "「打破」「鍋釜」，「沉」掉「船」",
+    "一目了然": "「一眼」看去，「了解」「然後」全懂",
+    "一箭雙鵰": "「一箭」射出，「中」兩隻「鳥」",
+    "虎視眈眈": "虎在「看」，「眈眈」地盯著",
+    "青出於藍": "「青色」「出自於」「藍色」之調配",
+    "當機立斷": "「當下的」「機會」立刻「判斷」要不要",
+    "半途而廢": "都到了「一半的路途」，就「作廢」掉了",
+    "如魚得水": "「就如」一條「魚」「得到了」水",
+}
 
 DIFFICULTY_ORDER = ["easy", "medium", "hard"]
 
@@ -223,6 +128,7 @@ def make_wrong_question(idiom: str, difficulty: str = "easy") -> dict | None:
         "correct_char": correct_char,
         "hint":         "找出錯字並秒準 1.5 秒",
         "difficulty":   difficulty,
+        "explanation":  explanations.get(idiom, ""),
     }
 
 
@@ -276,59 +182,66 @@ def make_fill_question(idiom: str, difficulty: str = "easy") -> dict | None:
         "options":    options[:4],
         "hint":       "秒準正確的字 1.5 秒",
         "difficulty": difficulty,
+        "explanation": explanations.get(idiom, ""),
     }
 
 
 def generate_questions(
     n: int = 10,
-    difficulty: str = "mixed",   # "mixed" 代表隨機混合三種難度
+    difficulty: str = "mixed",
     wrong_ratio: float = 0.5,
 ) -> list[dict]:
-    all_idioms  = list(idioms.keys())
+    all_idioms = list(idioms.keys())
     random.shuffle(all_idioms)
 
     n_wrong = round(n * wrong_ratio)
     n_fill  = n - n_wrong
 
-    questions = []
-    used      = set()
-
     def _random_diff():
-        """每題隨機挑一個難度"""
         if difficulty == "mixed":
             return random.choice(["easy", "medium", "hard"])
         return difficulty
 
-    def _pick(make_fn, count):
-        pool = [i for i in all_idioms if i not in used]
-        random.shuffle(pool)
-        result = []
-        for idiom in pool:
-            if len(result) >= count:
-                break
-            q = make_fn(idiom, _random_diff())
-            if q:
-                result.append(q)
-                used.add(idiom)
-        return result
+    # 選錯字題：每個成語最多出一題
+    wrong_qs = []
+    pool = all_idioms[:]
+    random.shuffle(pool)
+    for idiom in pool:
+        if len(wrong_qs) >= n_wrong:
+            break
+        q = make_wrong_question(idiom, _random_diff())
+        if q:
+            wrong_qs.append(q)
 
-    questions += _pick(make_wrong_question, n_wrong)
-    questions += _pick(make_fill_question,  n_fill)
+    # 填空題：每個成語最多出一題（可與選錯字重複用同成語）
+    fill_qs = []
+    pool = all_idioms[:]
+    random.shuffle(pool)
+    for idiom in pool:
+        if len(fill_qs) >= n_fill:
+            break
+        q = make_fill_question(idiom, _random_diff())
+        if q:
+            fill_qs.append(q)
 
+    # 若還不夠，兩種題型都允許重複出同一成語補足
+    questions = wrong_qs + fill_qs
     if len(questions) < n:
         extra_needed = n - len(questions)
-        extra_pool = all_idioms[:]
-        random.shuffle(extra_pool)
-        for idiom in extra_pool:
-            if len(questions) >= n:
+        pool = all_idioms[:]
+        random.shuffle(pool)
+        toggle = True
+        for idiom in pool * 3:   # 最多繞三圈
+            if extra_needed <= 0:
                 break
-            if extra_needed % 2 == 0:
-                q = make_fill_question(idiom, _random_diff())
-            else:
+            if toggle:
                 q = make_wrong_question(idiom, _random_diff())
+            else:
+                q = make_fill_question(idiom, _random_diff())
             if q:
                 questions.append(q)
                 extra_needed -= 1
+            toggle = not toggle
 
     random.shuffle(questions)
     return questions[:n]
