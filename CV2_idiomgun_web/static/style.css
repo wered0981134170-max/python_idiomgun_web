@@ -319,9 +319,9 @@ body::after {
 .result-card {
   background: rgba(8,16,28,0.97);
   border-radius: 10px;
-  padding: 52px 64px;
-  min-width: 560px;
-  max-width: 75vw;
+  padding: 56px 72px;
+  min-width: 620px;
+  max-width: 82vw;
   border: 1px solid var(--border);
   position: relative;
   overflow: hidden;
@@ -337,7 +337,7 @@ body::after {
 .result-card.timeout::before { background: linear-gradient(90deg, transparent, var(--neon-b), transparent); }
 
 .result-status {
-  font-size: 3.2rem;
+  font-size: 3.6rem;
   font-weight: 900;
   margin-bottom: 16px;
   letter-spacing: .08em;
@@ -346,9 +346,9 @@ body::after {
 .result-status.wrong   { color: var(--neon-r); text-shadow: 0 0 18px rgba(255,68,102,.6); }
 .result-status.timeout { color: var(--neon-b); text-shadow: var(--glow-b); }
 
-.result-detail { font-size: 1.6rem;  color: var(--text); margin-bottom: 10px; }
-.result-idiom  { font-size: 1.1rem; color: var(--muted); margin-bottom: 24px; }
-.result-next   { font-family: var(--font-mono); font-size: .95rem; color: var(--muted); letter-spacing: .2em; }
+.result-detail { font-size: 1.8rem;  color: var(--text); margin-bottom: 10px; }
+.result-idiom  { font-size: 1.15rem; color: var(--muted); margin-bottom: 20px; }
+.result-next   { font-family: var(--font-mono); font-size: 1rem; color: var(--muted); letter-spacing: .2em; }
 
 /* ── 最終結果 ────────────────────────────────── */
 #screen-final {
@@ -577,6 +577,28 @@ body.shake {
 }
 
 /* ── 積分榜按鈕（已移除，保留備用） ─────────── */
+
+/* ── 解析區塊 ────────────────────────────────── */
+.explanation-label {
+  font-family: var(--font-mono);
+  font-size: .88rem;
+  color: var(--neon-b);
+  letter-spacing: .15em;
+  margin: 20px 0 10px;
+  text-align: left;
+}
+
+.explanation-text {
+  font-size: 1.15rem;
+  color: rgba(232,240,248,0.88);
+  line-height: 1.8;
+  text-align: left;
+  padding: 14px 20px;
+  background: rgba(0,200,255,0.05);
+  border-left: 3px solid rgba(0,200,255,0.4);
+  border-radius: 0 4px 4px 0;
+  margin-bottom: 20px;
+}
 
 /* ── 側欄積分榜（首頁右上角） ───────────────── */
 .lb-row-side {
