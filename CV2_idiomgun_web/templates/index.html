@@ -625,17 +625,26 @@ const Game = (() => {
     const [status, detail, cls] = msgs[d.result] || msgs.timeout;
     $('result-status').textContent = status;
     $('result-status').className   = 'result-status ' + cls;
-    $('result-detail').textContent = detail;
-    $('result-idiom').textContent  = `成語：${d.idiom}　分數：${d.score}`;
+    hide($('result-detail'));
+    hide($('result-idiom'));
+
 
     // 解析：答錯或超時才顯示
     const expEl   = $('result-explanation');
     const expText = $('explanation-text');
     if ((d.result === 'wrong' || d.result === 'timeout') && d.explanation) {
-      expText.textContent = d.explanation;
+      expText.innerHTML = formatExplanation(d.explanation);
       show(expEl);
     } else {
       hide(expEl);
+    }
+
+    function formatExplanation(text) {
+      if (!text) return '';
+
+      return text.replace(/「(.*?)」/g, (match, p1) => {
+        return `<span class="exp-highlight">${p1}</span>`;
+      });
     }
 
     // 答錯時 hover 5 秒，答對 1.5 秒
