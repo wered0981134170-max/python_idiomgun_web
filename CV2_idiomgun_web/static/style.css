@@ -589,7 +589,7 @@ body.shake {
 }
 
 .explanation-text {
-  font-size: 1.15rem;
+  font-size: 2.0rem;
   color: rgba(232,240,248,0.88);
   line-height: 1.8;
   text-align: left;
@@ -653,3 +653,12 @@ body.shake {
   font-size: .85rem;
   text-align: right;
 }
+
+.exp-highlight {
+  color: var(--neon-g);
+  font-weight: 700;
+  font-size: 1.2em;
+  padding: 0 2px;
+  text-shadow: 0 0 6px rgba(76, 229, 0, 0.841);
+}
+
