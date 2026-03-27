@@ -578,28 +578,6 @@ body.shake {
 
 /* ── 積分榜按鈕（已移除，保留備用） ─────────── */
 
-/* ── 解析區塊 ────────────────────────────────── */
-.explanation-label {
-  font-family: var(--font-mono);
-  font-size: .75rem;
-  color: var(--neon-b);
-  letter-spacing: .15em;
-  margin: 18px 0 8px;
-  text-align: left;
-}
-
-.explanation-text {
-  font-size: .95rem;
-  color: rgba(232,240,248,0.82);
-  line-height: 1.7;
-  text-align: left;
-  padding: 12px 16px;
-  background: rgba(0,200,255,0.05);
-  border-left: 3px solid rgba(0,200,255,0.35);
-  border-radius: 0 4px 4px 0;
-  margin-bottom: 16px;
-}
-
 /* ── 側欄積分榜（首頁右上角） ───────────────── */
 .lb-row-side {
   display: grid;
