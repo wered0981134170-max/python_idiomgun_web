@@ -72,7 +72,22 @@ if __name__ == "__main__":
     print("目前資料：")
     print(get_top())
 
-    print("刪除 id=：", delete_score(5)) #要刪除的資料(玩家名稱)
+    print("刪除 id=：", delete_score()) #要刪除的資料
 
     print("刪除後：")
     print(get_top())
+
+
+
+# def reset_table():
+#     with _conn() as c:
+#         c.execute("DELETE FROM scores")  # 清空資料
+#         c.execute("DELETE FROM sqlite_sequence WHERE name='scores'")  # 重置 ID
+#         c.commit()
+
+# if __name__ == "__main__":
+#     print("重置前：", get_top())
+
+#     reset_table()
+
+#     print("重置後：", get_top())

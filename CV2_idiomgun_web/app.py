@@ -1,4 +1,3 @@
-
 # app.py──成語射擊遊戲 Flask 主程式
 # 支援本機開發&雲端部署(Render)
 
@@ -187,7 +186,7 @@ def start_game():
     wrong_r = float(data.get("wrong_ratio", WRONG_RATIO))
     total   = int(data.get("total_q", TOTAL_Q))
 
-    questions = generate_questions(n=total, difficulty=diff, wrong_ratio=wrong_r)
+    questions = generate_questions(n=total, wrong_ratio=wrong_r)
     with game_lock:
         gs = game_state
         gs["state"]        = "play"
@@ -223,7 +222,6 @@ def get_question():
             "template":   q.get("template", ""),
             "options":    q.get("options", []),
             "hint":       q["hint"],
-            "difficulty": q["difficulty"],
         })
 
 

@@ -1,13 +1,11 @@
-"""
-gesture.py  ── 手勢判斷模組
-提供 is_thumb_up(landmarks) 給主程式使用
-"""
+#gesture.py──手勢判斷模組
+#提供is_thumb_up(landmarks)給主程式使用
+
 
 
 def is_thumb_up(landmarks) -> bool:
-    """
-    規則：拇指尖端(4) 高於關節(3)，且高於食指根(5) → 拇指朝上
-    """
+
+    # 規則：拇指尖端(4) 高於關節(3)，且高於食指根(5) → 拇指朝上
     if not landmarks or len(landmarks) < 6:
         return False
     tip    = landmarks[4]   # 拇指尖
@@ -20,9 +18,8 @@ def is_thumb_up(landmarks) -> bool:
 
 def thumb_tip_pos(landmarks, frame_w: int, frame_h: int,
                   safe_l=35, safe_r=None, safe_t=55, safe_b=None) -> tuple[int, int]:
-    """
-    取得拇指尖在畫面中的像素座標（已 clamp 至安全邊界）
-    """
+    
+    #取得拇指尖在畫面中的像素座標
     if safe_r is None:
         safe_r = frame_w - 35
     if safe_b is None:
